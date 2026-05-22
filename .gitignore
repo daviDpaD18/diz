@@ -1,0 +1,30 @@
+# Training and validation image data
+train/
+valid/
+
+# Large annotation/label data files
+chexbert_labels/
+radgraph-XL-annotations/
+
+# Large CSV datasets
+train.csv
+valid.csv
+df_chexpert_plus_240401.csv
+my_final_dataset.csv
+
+# Archives
+*.zip
+
+# macOS metadata
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+venv/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
