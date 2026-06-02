@@ -1,0 +1,32 @@
+# ── Core ML ───────────────────────────────────────────────────────────────────
+torch>=2.12.0         # MPS backend on MacBook M5 Pro; A100 on Colab
+torchvision>=0.27.0   # transforms, functional ops
+timm>=1.0.27          # ViT-B/16 with ImageNet-21k pretrained weights
+
+# ── Data ──────────────────────────────────────────────────────────────────────
+numpy>=1.24.0
+pandas>=1.5.0
+Pillow>=9.0.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+scikit-multilearn>=0.2.0  # multi-label stratified splits (IterativeStratification)
+
+# ── Explainability ────────────────────────────────────────────────────────────
+grad-cam>=1.5.0       # pytorch-grad-cam: Grad-CAM hooks for ViT patch tokens
+shap>=0.44.0          # SHAP values for Component 2 text/clinical features
+einops>=0.7.0         # tensor rearranging for attention rollout operations
+
+# ── NLP / Multimodal (Component 2) ───────────────────────────────────────────
+transformers>=4.35.0          # BioClinicalBERT, BioViL-T
+sentence-transformers>=2.2.0  # sentence embeddings if needed
+
+# ── Visualisation ─────────────────────────────────────────────────────────────
+matplotlib>=3.7.0
+seaborn>=0.12.0
+opencv-python>=4.8.0  # heatmap overlays on chest X-rays
+
+# ── Notebook / Dev ────────────────────────────────────────────────────────────
+jupyter>=1.0.0
+jupyterlab>=4.0.0
+ipykernel>=6.0.0
+tqdm>=4.65.0
