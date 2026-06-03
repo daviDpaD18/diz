@@ -15,6 +15,18 @@ my_final_dataset.csv
 # Archives
 *.zip
 
+# Generated outputs (reproducible from notebooks)
+dizertatie_project/splits/
+dizertatie_project/weights/
+dizertatie_project/checkpoints/
+dizertatie_project/checkpoints_local/
+
+# Colab upload archive
+dizertatie_project/train.zip
+
+# Generated maps (large numpy arrays)
+dizertatie_project/maps/
+
 # macOS metadata
 .DS_Store
 
