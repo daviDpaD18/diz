@@ -171,3 +171,68 @@ def ratio_loss(
     for decision in decisions:
         loss = loss + (decision.float().mean() - stage_target) ** 2
     return lam * loss
+
+
+def class_aware_ratio_loss(
+    decisions: list,
+    labels: torch.Tensor,
+    class_weights: torch.Tensor,
+    final_keep_ratio: float,
+    lam: float = 2.0,
+    relax: float = 0.3,
+) -> torch.Tensor:
+    """
+    Class-imbalance-aware ratio loss for DynamicViT token pruning.
+
+    Standard ratio_loss assigns the same pruning target to every sample.
+    For rare pathologies (Pneumonia 1.5%, Fracture 5.5%), the classification
+    gradient is dominated by majority classes, so the predictor learns to drop
+    tokens that matter for minority labels.
+
+    This loss relaxes the per-sample keeping ratio proportionally to the
+    rarity of the rarest positive pathology in that sample — motivated by
+    per-sample adaptive budgets (ATS, ECCV 2022) applied to class imbalance
+    rather than image complexity, and the finding (MICCAI 2023) that pruning
+    disproportionately degrades rare-class performance.
+
+    A sample with only common pathologies is pruned to the base ratio.
+    A sample containing Pneumonia or Fracture is allowed to keep up to
+    (base_ratio + relax) of tokens, capped at 1.0.
+
+    Args:
+        decisions:        list of [B, N] keep decisions (one per pruning stage).
+        labels:           [B, 14] binary labels (post uncertain-remapping).
+        class_weights:    [14] inverse-frequency weights — same tensor as BCE.
+        final_keep_ratio: global target fraction, e.g. 0.5.
+        lam:              loss coefficient; 2.0 follows the DynamicViT paper.
+        relax:            max upward relaxation for the rarest positive label.
+                          E.g. relax=0.3, ratio=0.5 → stage target moves from
+                          ~0.707 up to ~0.917 for a pure-Pneumonia sample.
+
+    Returns:
+        Scalar loss tensor (differentiable through decisions via Gumbel-softmax).
+
+    Drop-in replacement for ratio_loss in the training loop:
+        r_loss = class_aware_ratio_loss(decisions, labels, class_weights, ratio)
+        loss   = bce_loss + r_loss
+    """
+    stage_target_base = final_keep_ratio ** 0.5
+
+    w      = class_weights.to(labels.device)                        # [14]
+    w_norm = (w - w.min()) / (w.max() - w.min() + 1e-8)            # [14] → [0,1]
+
+    # Per-sample: highest normalised weight among positive labels.
+    # All-negative samples get 0 → no relaxation applied.
+    per_sample_w = (
+        (labels > 0.5).float() * w_norm.unsqueeze(0)
+    ).max(dim=1).values                                             # [B]
+
+    per_sample_tgt = (
+        stage_target_base * (1.0 + relax * per_sample_w)
+    ).clamp(0.0, 1.0)                                               # [B]
+
+    loss = sum(
+        ((decision.float().mean(dim=1) - per_sample_tgt) ** 2).mean()
+        for decision in decisions
+    )
+    return lam * loss
